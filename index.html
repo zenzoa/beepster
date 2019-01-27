@@ -134,9 +134,10 @@
                 'blues-minor': ['C', 'Eb', 'F', 'Ab', 'Bb'],
                 'blues-major': ['C', 'D', 'F', 'G', 'A']
             }
- 
-            let notes = scales['minor-pentatonic']
-            let octaves = [2, 3, 4, 5]
+
+            let currentScale = 'minor-pentatonic'
+            let notes = scales[currentScale]
+            let octaves = [1, 2, 3, 4, 5, 6]
             let beats = [16, 8, 4, 2, 1]
             let volumes = [0, 0.2, 0.4, 0.6, 0.8, 1]
  
@@ -326,7 +327,7 @@
                 return container
             }
  
-            let renderTrack = (track) => {
+            let renderTrack = (track, trackId) => {
                 let container = document.createElement('div')
                 container.className = 'track'
 
@@ -343,7 +344,7 @@
                 instrumentButton.innerHTML = renderInstrumentSVG(track.instrument)
                 instrumentButton.addEventListener('click', () => {
                     track.instrument = randomInstrument()
-                    renderTrackList()
+                    instrumentButton.innerHTML = renderInstrumentSVG(track.instrument)
                 })
                 container.appendChild(instrumentButton)
 
@@ -355,6 +356,15 @@
 
                 let octaveModifier = renderModifier('pitch', track.octave, octaves, x => track.octave = x)
                 container.appendChild(octaveModifier)
+
+                let randomButton = document.createElement('button')
+                randomButton.className = 'random-button'
+                randomButton.innerText = '⟳'
+                randomButton.addEventListener('click', () => {
+                    tracks[trackId] = randomTrack()
+                    renderTrackList()
+                })
+                container.appendChild(randomButton)
  
                 return container
             }
@@ -362,15 +372,33 @@
             let renderTrackList = () => {
                 let trackList = document.getElementById('tracks')
                 trackList.innerHTML = ''
-                tracks.forEach(track => {
-                    let trackEl = renderTrack(track)
+                tracks.forEach((track, trackId) => {
+                    let trackEl = renderTrack(track, trackId)
                     trackList.appendChild(trackEl)
                 })
+            }
+
+            let updateScale = () => {
+                if (currentScale === 'minor-pentatonic') currentScale = 'major-pentatonic'
+                else if (currentScale === 'major-pentatonic') currentScale = 'suspended'
+                else if (currentScale === 'suspended') currentScale = 'blues-minor'
+                else if (currentScale === 'blues-minor') currentScale = 'blues-major'
+                else if (currentScale === 'blues-major') currentScale = 'minor-pentatonic'
+
+                let notes = scales[currentScale]
+                tracks.forEach(track => {
+                    track.loop = randomLoop()
+                })
+
+                document.getElementById('scale-button').innerText = currentScale.replace('-', ' ') + ' scale'
             }
  
             window.onload = () => {
                 tracks = Array(4).fill(0).map(() => randomTrack())
-                console.log(tracks)
+
+                let scaleButton = document.getElementById('scale-button')
+                scaleButton.innerText = 'minor pentatonic scale'
+                scaleButton.addEventListener('click', updateScale)
  
                 renderTrackList()
                 playTracks()
@@ -397,14 +425,13 @@
 
             main {
                 margin: 20px auto;
-                max-width: 600px;
+                max-width: 700px;
             }
 
             .track {
                 display: flex;
                 flex-direction: row;
                 align-items: center;
-                flex-wrap: wrap;
                 margin: 10px 0;
                 background: #eee;
                 border-radius: 6px;
@@ -426,6 +453,7 @@
             .modifier > div {
                 display: flex;
                 flex-direction: row;
+                justify-content: center;
             }
 
             .modifier > div:first-child {
@@ -458,6 +486,10 @@
                 color: white;
             }
 
+            input[type="checkbox"] {
+                margin-left: 20px;
+            }
+
             button {
                 margin: 0;
                 padding: 5px 10px;
@@ -483,6 +515,21 @@
                 margin: 5px;
             }
 
+            .random-button {
+                width: 50px;
+                height: 50px;
+                background: none;
+                color: hotpink;
+                font-size: larger;
+                font-weight: bold;
+            }
+
+            #scale-button {
+                width: 100%;
+                height: 40px;
+                padding: 0 20px;
+            }
+
             footer {
                 font-size: small;
             }
@@ -496,7 +543,12 @@
                 .modifier {
                     flex-basis: 100%;
                 }
-                
+
+                .track {
+                    flex-wrap: wrap;
+                    justify-content: center;
+                }
+
                 .instrument-button {
                     flex-grow: 1;
                 }
@@ -510,6 +562,7 @@
         </header>
         <main>
             <div id="tracks"></div>
+            <button id="scale-button"></button>
         </main>
         <footer>
             <a href="https://zenzoa.com">sg 2019</a>
