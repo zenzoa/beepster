@@ -300,7 +300,7 @@
                 container.appendChild(valueContainer)
                 
                 let prevButton = document.createElement('button')
-                prevButton.innerText = '<'
+                prevButton.innerText = '↙'
                 prevButton.addEventListener('click', () => {
                     index--
                     if (index < 0) index = 0
@@ -314,7 +314,7 @@
                 valueContainer.appendChild(valueEl)
 
                 let nextButton = document.createElement('button')
-                nextButton.innerText = '>'
+                nextButton.innerText = '↗'
                 nextButton.addEventListener('click', () => {
                     index++
                     if (index >= valueList.length) index = valueList.length - 1
@@ -386,6 +386,7 @@
                 font-family: sans-serif;
                 font-size: 16px;
                 color: #444;
+                text-align: center;
             }
 
             h1 {
@@ -395,16 +396,16 @@
             }
 
             main {
-                margin: 20px 0px;
-                max-width: 550px;
+                margin: 20px auto;
+                max-width: 600px;
             }
 
             .track {
                 display: flex;
                 flex-direction: row;
                 align-items: center;
+                flex-wrap: wrap;
                 margin: 10px 0;
-                padding: 10px;
                 background: #eee;
                 border-radius: 6px;
                 font-size: small;
@@ -414,8 +415,12 @@
                 margin-top: 10px;
             }
 
-            .track > * + * {
-                margin-left: 12px;
+            .track > * {
+                margin: 10px;
+            }
+
+            .modifier {
+                flex-grow: 1;
             }
 
             .modifier > div {
@@ -428,7 +433,7 @@
             }
 
             .modifier > div > button {
-                width: 40px;
+                flex-grow: 1;
                 height: 30px;
                 z-index: 1;
             }
@@ -485,6 +490,16 @@
             a, a:active, a:visited {
                 color: inherit;
                 text-decoration: underline;
+            }
+
+            @media (max-width: 600px) {
+                .modifier {
+                    flex-basis: 100%;
+                }
+                
+                .instrument-button {
+                    flex-grow: 1;
+                }
             }
  
         </style>
