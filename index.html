@@ -403,6 +403,7 @@
             let updateShareUrl = () => {
                 let shareLink = document.getElementById('share')
                 shareLink.href = getUrlData()
+                history.replaceState(null, '', getUrlData())
             }
 
             let getUrlData = () => {
