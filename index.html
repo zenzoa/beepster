@@ -138,7 +138,7 @@
             let notes = scales[currentScale]
             let octaves = [1, 2, 3, 4, 5, 6]
             let beats = [16, 8, 4, 2, 1]
-            let volumes = [0, 0.2, 0.4, 0.6, 0.8, 1]
+            let volumes = [0.1, 0.2, 0.4, 0.6, 0.8, 1]
  
             let loopLength = 8
             let noteVariation = 2
@@ -510,7 +510,6 @@
 
                     tracks.push(track)
                 })
-                renderTrackList()
             }
 
             let initialize = () => {
@@ -522,14 +521,22 @@
                 let scaleButton = document.getElementById('scale-button')
                 scaleButton.innerText = 'minor pentatonic scale'
                 scaleButton.addEventListener('click', updateScale)
+
+                loadUrlData(window.location.href)
+                updateShareUrl()
  
                 renderTrackList()
                 playTracks()
             }
  
             window.onload = () => {
-                initialize()
-                loadUrlData(window.location.href)
+                let startButton = document.getElementById('start-button')
+                startButton.addEventListener('click', () => {
+                    initialize()
+                    document.getElementById('start-button').className = 'hidden'
+                    document.getElementById('tracks').className = ''
+                    document.getElementById('scale-button').className = ''
+                })
             }
  
         </script>
@@ -652,7 +659,7 @@
                 font-weight: bold;
             }
 
-            #scale-button {
+            main > button {
                 width: 100%;
                 height: 40px;
                 padding: 0 20px;
@@ -665,6 +672,10 @@
             a, a:active, a:visited {
                 color: inherit;
                 text-decoration: underline;
+            }
+
+            .hidden {
+                display: none;
             }
 
             @media (max-width: 650px) {
@@ -689,8 +700,9 @@
             <h1>⧞ beepster</h1>
         </header>
         <main>
-            <div id="tracks"></div>
-            <button id="scale-button"></button>
+            <button id="start-button">let's get started!</button>
+            <div id="tracks" class="hidden"></div>
+            <button id="scale-button" class="hidden"></button>
         </main>
         <footer>
             <a href="https://zenzoa.com" target="_blank">sg 2019</a> |
