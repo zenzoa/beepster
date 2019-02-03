@@ -530,14 +530,20 @@
                 playTracks()
             }
  
+            let launch = () => {
+                initialize()
+                document.getElementById('start-button').className = 'hidden'
+                document.getElementById('tracks').className = ''
+                document.getElementById('scale-button').className = ''
+            }
+
             window.onload = () => {
-                let startButton = document.getElementById('start-button')
-                startButton.addEventListener('click', () => {
-                    initialize()
-                    document.getElementById('start-button').className = 'hidden'
-                    document.getElementById('tracks').className = ''
-                    document.getElementById('scale-button').className = ''
-                })
+                if (window.location.href.indexOf('?beeps=') >= 0) {
+                    launch()
+                } else {
+                    let startButton = document.getElementById('start-button')
+                    startButton.addEventListener('click', launch)
+                }
             }
  
         </script>
