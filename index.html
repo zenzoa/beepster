@@ -5,8 +5,7 @@
         <meta charset="UTF-8">
  
         <script>
-            const AudioContext = window.AudioContext || window.webkitAudioContext
-            const audioCtx = new AudioContext()
+            let AudioContext, audioCtx
  
             let frequencies = {
                 'C0': 16.35,
@@ -307,6 +306,7 @@
                     if (index < 0) index = 0
                     onChange(valueList[index])
                     valueEl.innerText = index + 1
+                    updateShareUrl()
                 })
                 valueContainer.appendChild(prevButton)
 
@@ -321,6 +321,7 @@
                     if (index >= valueList.length) index = valueList.length - 1
                     onChange(valueList[index])
                     valueEl.innerText = index + 1
+                    updateShareUrl()
                 })
                 valueContainer.appendChild(nextButton)
 
@@ -336,6 +337,7 @@
                 playCheckbox.checked = track.playing
                 playCheckbox.addEventListener('change', e => {
                     track.playing = e.target.checked
+                    updateShareUrl()
                 })
                 container.appendChild(playCheckbox)
  
@@ -345,6 +347,7 @@
                 instrumentButton.addEventListener('click', () => {
                     track.instrument = randomInstrument()
                     instrumentButton.innerHTML = renderInstrumentSVG(track.instrument)
+                    updateShareUrl()
                 })
                 container.appendChild(instrumentButton)
 
@@ -363,6 +366,7 @@
                 randomButton.addEventListener('click', () => {
                     tracks[trackId] = randomTrack()
                     renderTrackList()
+                    updateShareUrl()
                 })
                 container.appendChild(randomButton)
  
@@ -378,12 +382,14 @@
                 })
             }
 
-            let updateScale = () => {
-                if (currentScale === 'minor-pentatonic') currentScale = 'major-pentatonic'
-                else if (currentScale === 'major-pentatonic') currentScale = 'suspended'
-                else if (currentScale === 'suspended') currentScale = 'blues-minor'
-                else if (currentScale === 'blues-minor') currentScale = 'blues-major'
-                else if (currentScale === 'blues-major') currentScale = 'minor-pentatonic'
+            let updateScale = (newScale) => {
+                if (typeof newScale !== 'string') {
+                    if (currentScale === 'minor-pentatonic') currentScale = 'major-pentatonic'
+                    else if (currentScale === 'major-pentatonic') currentScale = 'suspended'
+                    else if (currentScale === 'suspended') currentScale = 'blues-minor'
+                    else if (currentScale === 'blues-minor') currentScale = 'blues-major'
+                    else if (currentScale === 'blues-major') currentScale = 'minor-pentatonic'
+                }
 
                 let notes = scales[currentScale]
                 tracks.forEach(track => {
@@ -391,9 +397,126 @@
                 })
 
                 document.getElementById('scale-button').innerText = currentScale.replace('-', ' ') + ' scale'
+                updateShareUrl()
             }
- 
-            window.onload = () => {
+
+            let updateShareUrl = () => {
+                let shareLink = document.getElementById('share')
+                shareLink.href = getUrlData()
+            }
+
+            let getUrlData = () => {
+                let baseUrlEnd = window.location.href.indexOf('?')
+                let url = window.location.href.slice(0, baseUrlEnd)
+                url += '?beeps='
+
+                url += 'S' + Object.keys(scales).indexOf(currentScale) + '-'
+
+                url += tracks.map(track => {
+                    let data = 'T'
+                    data += 'p' + (track.playing ? 1 : 0) + ','
+                    data += 'o' + track.octave + ','
+                    data += 'b' + track.beat + ','
+                    data += 'v' + Math.floor(track.volume * 10) + ','
+
+                    data += 'w' + track.instrument.wave.slice(0, 2) + ','
+                    data += 'a' + Math.floor(track.instrument.attack * 10000) + ','
+                    data += 'd' + Math.floor(track.instrument.decay * 10000) + ','
+                    data += 's' + Math.floor(track.instrument.sustain * 10000) + ','
+                    data += 'r' + Math.floor(track.instrument.release * 10000)
+                    
+                    return data
+                }).join('-')
+
+                return url
+            }
+
+            let loadUrlData = (url) => {
+                dataStarts = url.indexOf('?beeps=')
+                if (dataStarts < 0) return
+
+                url = url.slice(dataStarts + 7)
+                let urlParts = url.split('-')
+                tracks = []
+                urlParts.forEach(data => {
+                    if (data[0] === 'S') {
+                        let scaleList = Object.keys(scales)
+                        let scaleIndex = parseInt(data.slice(1))
+                        if (scaleIndex >= 0 && scaleIndex < scaleList.length) {
+                            currentScale = scaleList[scaleIndex]
+                            updateScale(currentScale)
+                        }
+                        return
+                    }
+                    let track = randomTrack()
+
+                    data = data.slice(1)
+                    let parts = data.split(',')
+                    parts.forEach(part => {
+                        let partType = part[0]
+                        part = part.slice(1)
+                        if (partType === 'p') {
+                            track.playing = part !== '0'
+                        }
+                        else if (partType === 'o') {
+                            let octave = parseInt(part)
+                            if (!isNaN(octave) && octaves.includes(octave)) {
+                                track.octave = octave
+                            }
+                        }
+                        else if (partType === 'b') {
+                            let beat = parseInt(part)
+                            if (!isNaN(beat) && beats.includes(beat)) {
+                                track.beat = beat
+                            }
+                        }
+                        else if (partType === 'v') {
+                            let volume = parseInt(part) / 10
+                            if (!isNaN(volume) && volumes.includes(volume)) {
+                                track.volume = volume
+                            }
+                        }
+                        else if (partType === 'w') {
+                            if (part === 'tr') track.instrument.wave = 'triangle'
+                            else if (part === 'sa') track.instrument.wave = 'saw'
+                            else if (part === 'si') track.instrument.wave = 'sine'
+                            else if (part === 'sq') track.instrument.wave = 'square'
+                        }
+                        else if (partType === 'a') {
+                            let attack = parseInt(part) / 10000
+                            if (!isNaN(attack) && attack >= 0 && attack < 1) {
+                                track.instrument.attack = attack
+                            }
+                        }
+                        else if (partType === 'd') {
+                            let decay = parseInt(part) / 10000
+                            if (!isNaN(decay) && decay >= 0 && decay < 1) {
+                                track.instrument.decay = decay
+                            }
+                        }
+                        else if (partType === 's') {
+                            let sustain = parseInt(part) / 10000
+                            if (!isNaN(sustain) && sustain >= 0 && sustain < 1) {
+                                track.instrument.sustain = sustain
+                            }
+                        }
+                        else if (partType === 'r') {
+                            let release = parseInt(part) / 10000
+                            if (!isNaN(release) && release >= 0 && release < 2) {
+                                track.instrument.release = release
+                            }
+                        }
+                    })
+
+                    tracks.push(track)
+                })
+                renderTrackList()
+            }
+
+            let initialize = () => {
+                AudioContext = window.AudioContext || window.webkitAudioContext
+                audioCtx = new AudioContext()
+
                 tracks = Array(4).fill(0).map(() => randomTrack())
 
                 let scaleButton = document.getElementById('scale-button')
@@ -402,6 +525,11 @@
  
                 renderTrackList()
                 playTracks()
+            }
+ 
+            window.onload = () => {
+                initialize()
+                loadUrlData(window.location.href)
             }
  
         </script>
@@ -539,7 +667,7 @@
                 text-decoration: underline;
             }
 
-            @media (max-width: 600px) {
+            @media (max-width: 650px) {
                 .modifier {
                     flex-basis: 100%;
                 }
@@ -565,7 +693,8 @@
             <button id="scale-button"></button>
         </main>
         <footer>
-            <a href="https://zenzoa.com">sg 2019</a>
+            <a href="https://zenzoa.com" target="_blank">sg 2019</a> |
+            <a id="share" href="" target="_blank">share these beeps</a>
         </footer>
     </body>
 </html>
