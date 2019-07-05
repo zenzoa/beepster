@@ -403,6 +403,7 @@
             let updateShareUrl = () => {
                 let shareLink = document.getElementById('share')
                 shareLink.href = getUrlData()
+                history.replaceState(null, '', getUrlData())
             }
 
             let getUrlData = () => {
@@ -529,14 +530,20 @@
                 playTracks()
             }
  
+            let launch = () => {
+                initialize()
+                document.getElementById('start-button').className = 'hidden'
+                document.getElementById('tracks').className = ''
+                document.getElementById('scale-button').className = ''
+            }
+
             window.onload = () => {
-                let startButton = document.getElementById('start-button')
-                startButton.addEventListener('click', () => {
-                    initialize()
-                    document.getElementById('start-button').className = 'hidden'
-                    document.getElementById('tracks').className = ''
-                    document.getElementById('scale-button').className = ''
-                })
+                if (window.location.href.indexOf('?beeps=') >= 0) {
+                    launch()
+                } else {
+                    let startButton = document.getElementById('start-button')
+                    startButton.addEventListener('click', launch)
+                }
             }
  
         </script>
@@ -674,6 +681,10 @@
                 text-decoration: underline;
             }
 
+            #title {
+                text-decoration: none;
+            }
+
             .hidden {
                 display: none;
             }
@@ -697,7 +708,7 @@
     </head>
     <body>
         <header>
-            <h1>⧞ beepster</h1>
+            <h1>⧞ <a id="title" href="?">beepster</a></h1>
         </header>
         <main>
             <button id="start-button">let's get started!</button>
